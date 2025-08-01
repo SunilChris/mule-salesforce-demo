@@ -1,0 +1,10 @@
+db:
+  host: 'sql12.freesqldatabase.com'
+  port: '3306'
+  username: 'sql12792353'
+  password: '7bMhSBfkJF'
+  database: 'sql12792353'
+sf:
+  email: 'soniyaarockiya@gmail.com'
+  password: 'Soniya@321'
+  token: 'HaTEyJLEDEY7gu4cfhYw1VLHB'
