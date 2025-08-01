@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ba215eb6-fc14-4d9d-8b7a-118d037a3d11" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="795e85f2-2444-4850-a6c9-03e114561714" >
+		<db:my-sql-connection host="sql12.freesqldatabase.com" port="3306" user="sql12792353" password="7bMhSBfkJF" database="sql12792353" />
+	</db:config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="60bd840b-81f4-4a03-8656-286bd39d824e" >
+		<salesforce:basic-connection username="soniyaarockiya@gmail.com" password="Soniya@321" securityToken="HaTEyJLEDEY7gu4cfhYw1VLHB" />
+	</salesforce:sfdc-config>
+	<flow name="get-customers">
+		<http:listener config-ref="HTTP_Listener_config"
+			path="/customers" />
+		<db:select config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM customers]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="93739d4e-6718-4a18-8b15-e747c226d5b7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+	<flow name="sync-leads-to-salesforce">
+		<http:listener config-ref="HTTP_Listener_config"
+			path="/sync-leads" />
+		<db:select config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM customers]]></db:sql>
+		</db:select>
+		<salesforce:create doc:name="Create" doc:id="78c69d30-215f-4115-b460-6dffe7dc5208" config-ref="Salesforce_Config" type="Lead">
+			<salesforce:records ><![CDATA[#[payload map ((customer) -> {
+            'FirstName': customer.first_name,
+            'LastName': customer.last_name,
+            'Company': customer.company,
+            'Email': customer.email})]]]></salesforce:records>
+		</salesforce:create>
+	</flow>
+
+</mule>
