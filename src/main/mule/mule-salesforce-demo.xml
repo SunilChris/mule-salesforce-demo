@@ -50,6 +50,14 @@ payload]]></ee:set-payload>
             'Company': customer.company,
             'Email': customer.email})]]]></salesforce:records>
 		</salesforce:create>
+		<ee:transform doc:name="Transform Message" doc:id="ae837c8a-d6b1-4a2d-a70e-15a2b1707e51" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 
 </mule>
