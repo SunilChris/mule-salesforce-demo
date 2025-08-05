@@ -1,9 +1,9 @@
 db:
-  host: 'sql12.freesqldatabase.com'
+  host: '34.93.168.202'
   port: '3306'
-  username: 'sql12792353'
-  password: '7bMhSBfkJF'
-  database: 'sql12792353'
+  username: 'root'
+  password: 'Mulesoft@feb24'
+  database: 'main'
 sf:
   email: 'soniyaarockiya@gmail.com'
   password: 'Soniya@321'

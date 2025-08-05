@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+<mule
+	xmlns:crypto="http://www.mulesoft.org/schema/mule/crypto"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
 	xmlns:db="http://www.mulesoft.org/schema/mule/db"
 	xmlns:http="http://www.mulesoft.org/schema/mule/http"
 	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
@@ -10,7 +12,8 @@
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/crypto http://www.mulesoft.org/schema/mule/crypto/current/mule-crypto.xsd">
 
 	<flow name="get-customers">
 		<http:listener config-ref="HTTP_Listener_config"
@@ -18,9 +21,10 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 		<db:select config-ref="Database_Config">
 			<db:sql><![CDATA[SELECT * FROM customers]]></db:sql>
 		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="93739d4e-6718-4a18-8b15-e747c226d5b7" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<ee:transform doc:name="Transform Message"
+			doc:id="93739d4e-6718-4a18-8b15-e747c226d5b7">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 payload]]></ee:set-payload>
@@ -34,21 +38,61 @@ payload]]></ee:set-payload>
 		<db:select config-ref="Database_Config">
 			<db:sql><![CDATA[SELECT * FROM customers]]></db:sql>
 		</db:select>
-		<salesforce:create doc:name="Create" doc:id="78c69d30-215f-4115-b460-6dffe7dc5208" config-ref="Salesforce_Config" type="Lead">
-			<salesforce:records ><![CDATA[#[payload map ((customer) -> {
+		<salesforce:create doc:name="Create"
+			doc:id="78c69d30-215f-4115-b460-6dffe7dc5208"
+			config-ref="Salesforce_Config" type="Lead">
+			<salesforce:records><![CDATA[#[payload map ((customer) -> {
             'FirstName': customer.first_name,
             'LastName': customer.last_name,
             'Company': customer.company,
             'Email': customer.email})]]]></salesforce:records>
 		</salesforce:create>
-		<ee:transform doc:name="Transform Message" doc:id="ae837c8a-d6b1-4a2d-a70e-15a2b1707e51" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<ee:transform doc:name="Transform Message"
+			doc:id="ae837c8a-d6b1-4a2d-a70e-15a2b1707e51">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
+
+	<!-- [STUDIO:"signup-flow"]<flow name="signup-flow">
+		<http:listener config-ref="HTTP_Listener_config"
+			path="/signup" method="POST" />
+
+		<!&#45;&#45; Validate input &#45;&#45;>
+
+		<!&#45;&#45; Hash password (use bcrypt) &#45;&#45;>
+		<set-variable variableName="hashedPassword"
+			value="#[Java::org.mule.modules.bcrypt.BCrypt.hashpw(payload.password, '${bcrypt.salt}')&#93;" />
+
+		<!&#45;&#45; Insert into MySQL &#45;&#45;>
+		<crypto:jce-encrypt doc:name="Jce encrypt" doc:id="005b5e10-0d67-47ca-b5b1-87cf55b4e27a" />
+		<db:insert config-ref="Database_Config">
+			<db:sql><![CDATA[INSERT INTO users (username, password, email) 
+                VALUES (:username, :password, :email)&#93;&#93;></db:sql>
+			<db:input-parameters><![CDATA[#[{
+            'username': payload.username,
+            'password': vars.hashedPassword,
+            'email': payload.email
+        }&#93;&#93;&#93;></db:input-parameters>
+		</db:insert>
+
+		<!&#45;&#45; (Optional) Sync to Salesforce as Lead &#45;&#45;>
+		<salesforce:create config-ref="Salesforce_Config"
+			type="Lead">
+			<salesforce:objects>#[{
+				'FirstName': payload.username,
+				'LastName': '(New User)',
+				'Email': payload.email,
+				'Company': 'Self-Registered'
+				}&#93;</salesforce:objects>
+		</salesforce:create>
+
+		<!&#45;&#45; Return success &#45;&#45;>
+		<set-payload value="#['User created successfully'&#93;" />
+	</flow> [STUDIO] -->
 
 </mule>
