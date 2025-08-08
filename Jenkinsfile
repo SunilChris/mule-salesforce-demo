@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/SunilChris/mule-salesforce-demo.git'
+                git branch: 'main', url: 'git@github.com:SunilChris/mule-salesforce-demo.git'
             }
         }
         stage('Build & Deploy') {
